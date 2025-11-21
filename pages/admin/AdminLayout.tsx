@@ -92,7 +92,7 @@ const AdminLayout: React.FC = () => {
             className="w-10 h-10 rounded-full object-cover border border-gray-200"
           />
           <div>
-            <h1 className="text-lg font-bold text-brand-700 leading-tight">NIOS Axis</h1>
+            <h1 className="text-sm font-bold text-brand-700 leading-tight">NIOS Axis Academy</h1>
             <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Admin Panel</p>
           </div>
         </div>

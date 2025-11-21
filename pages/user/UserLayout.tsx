@@ -111,7 +111,7 @@ const UserLayout: React.FC = () => {
               alt="Logo" 
               className="w-8 h-8 rounded-full object-cover border border-gray-200" 
             />
-            <span className="font-bold text-brand-700 text-sm sm:text-base">NIOS Axis</span>
+            <span className="font-bold text-brand-700 text-sm sm:text-base">NIOS Axis Academy</span>
           </div>
 
           <button onClick={handleLogout} className="text-gray-500 hover:text-red-600 transition-colors ml-2">

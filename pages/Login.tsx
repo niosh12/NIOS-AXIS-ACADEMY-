@@ -180,8 +180,8 @@ const Login: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8 animate-in slide-in-from-top-4 duration-500">
           <img 
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSi0yZr23c1YxOeAfqn1pCJHb3t0M9v9Cv9og&s" 
-            alt="NIOS Logo" 
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-gDN6R3LZ6UIW9f7VISLRzm9u_CvVlSRh2A&s" 
+            alt="NIOS Axis Academy Logo" 
             className="w-24 h-24 mx-auto mb-6 rounded-full object-cover shadow-lg border-4 border-white"
           />
           <h1 className="text-3xl font-bold text-brand-900 mb-2 tracking-tight">NIOS AXIS ACADEMY</h1>
@@ -242,7 +242,7 @@ const Login: React.FC = () => {
         </Card>
         
         <p className="text-center text-gray-400 text-xs mt-8">
-          Protected System • NIOS VISION POINT
+          Protected System • NIOS AXIS ACADEMY
         </p>
       </div>
     </div>
