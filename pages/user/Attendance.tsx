@@ -4,7 +4,7 @@ import { useAuth } from '../../App';
 import { Button } from '../../components/UI';
 import { addDoc, collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { CheckCircle, Camera, Clock, Timer, AlertTriangle, XCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle, Camera, Clock, Timer, AlertTriangle, XCircle, RefreshCw, Calendar } from 'lucide-react';
 import { AttendanceRecord } from '../../types';
 
 const UserAttendance: React.FC = () => {
@@ -17,6 +17,10 @@ const UserAttendance: React.FC = () => {
   const [cameraError, setCameraError] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // History State
+  const [history, setHistory] = useState<AttendanceRecord[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+
   const todayStr = new Date().toISOString().split('T')[0];
 
   // Clock
@@ -25,7 +29,7 @@ const UserAttendance: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Load Attendance
+  // Load Today's Attendance
   useEffect(() => {
     const fetchAttendance = async () => {
       if (!user) return;
@@ -47,6 +51,32 @@ const UserAttendance: React.FC = () => {
     };
     fetchAttendance();
   }, [user, todayStr]);
+
+  // Load Attendance History
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!user) return;
+      try {
+        // Fetch all records for this user
+        const q = query(
+          collection(db, 'attendance'), 
+          where('userId', '==', user.userId)
+        );
+        const snap = await getDocs(q);
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as AttendanceRecord));
+        
+        // Sort by date descending (Newest first)
+        list.sort((a, b) => b.date.localeCompare(a.date));
+        
+        setHistory(list);
+      } catch (e) {
+        console.error("Fetch history failed", e);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+    fetchHistory();
+  }, [user]); // Reload when user changes
 
   // Image Compression Helper
   const compressImage = (file: File): Promise<string> => {
@@ -124,7 +154,10 @@ const UserAttendance: React.FC = () => {
 
     try {
       const docRef = await addDoc(collection(db, 'attendance'), newRecord);
-      setAttendance({ ...newRecord, id: docRef.id });
+      const savedRecord = { ...newRecord, id: docRef.id };
+      setAttendance(savedRecord);
+      // Update local history list to include today immediately
+      setHistory(prev => [savedRecord, ...prev]);
       setPhotoPreview(null);
     } catch (e) {
       console.error(e);
@@ -147,6 +180,8 @@ const UserAttendance: React.FC = () => {
           overtimeStartTime: nowFormatted
         });
         setAttendance(prev => prev ? { ...prev, outTime: "06:00 PM", overtimeStartTime: nowFormatted } : null);
+        // Update history list item locally
+        setHistory(prev => prev.map(item => item.id === attendance.id ? { ...item, outTime: "06:00 PM", overtimeStartTime: nowFormatted } : item));
       } else {
         const startStr = attendance.overtimeStartTime!;
         // Simple parse helper
@@ -171,6 +206,8 @@ const UserAttendance: React.FC = () => {
           overtimeHours: hours
         });
         setAttendance(prev => prev ? { ...prev, overtimeEndTime: nowFormatted, overtimeHours: hours } : null);
+        // Update history list item locally
+        setHistory(prev => prev.map(item => item.id === attendance.id ? { ...item, overtimeEndTime: nowFormatted, overtimeHours: hours } : item));
       }
     } catch (e) {
       console.error(e);
@@ -338,6 +375,53 @@ const UserAttendance: React.FC = () => {
                 </div>
              </div>
           )}
+        </div>
+      </div>
+
+      {/* HISTORY SECTION */}
+      <div className="pt-8">
+        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-gray-500" />
+          Recent Attendance Records
+        </h3>
+        
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left text-gray-600">
+              <thead className="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3">Date</th>
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Check In</th>
+                  <th className="px-6 py-3">Check Out</th>
+                  <th className="px-6 py-3">Overtime</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loadingHistory ? (
+                  <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">Loading records...</td></tr>
+                ) : history.length === 0 ? (
+                  <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">No past records found.</td></tr>
+                ) : (
+                  history.map(rec => (
+                    <tr key={rec.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{new Date(rec.date).toDateString()}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${rec.status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {rec.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-mono text-brand-600">{rec.inTime}</td>
+                      <td className="px-6 py-4 font-mono text-gray-500">{rec.outTime || '-'}</td>
+                      <td className="px-6 py-4 font-mono text-indigo-600 font-semibold">
+                        {rec.overtimeHours ? `${rec.overtimeHours}h` : '-'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

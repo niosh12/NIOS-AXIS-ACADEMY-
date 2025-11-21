@@ -22,7 +22,9 @@ const AdminSettings: React.FC = () => {
   useEffect(() => {
     const q = query(collection(db, 'admins'), orderBy('createdAt', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
-      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as AdminData));
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as AdminData))
+        // Filter out invalid entries to prevent "Invalid Date" or broken rows
+        .filter(a => a.createdAt && !isNaN(new Date(a.createdAt).getTime()));
       setAdmins(list);
     });
     return () => unsub();
