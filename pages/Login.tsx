@@ -204,7 +204,7 @@ const Login: React.FC = () => {
                 {mode === 'user' ? <User className="w-8 h-8 text-brand-600" /> : <ShieldCheck className="w-8 h-8 text-brand-600" />}
               </div>
               <h2 className="text-xl font-semibold text-gray-800">
-                {mode === 'user' ? 'Student/Staff Login' : 'Administrator Access'}
+                {mode === 'user' ? 'Staff Login' : 'Administrator Access'}
               </h2>
             </div>
 

@@ -1,11 +1,9 @@
-
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../App';
 import { Card, Button, TextArea, Input } from '../../components/UI';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Send, CheckCircle, ClipboardList, AlertTriangle, Sparkles } from 'lucide-react';
+import { Send, CheckCircle, ClipboardList, AlertTriangle, Sparkles, SmilePlus } from 'lucide-react';
 import { WorkReport } from '../../types';
 
 const UserDashboard: React.FC = () => {
@@ -13,6 +11,22 @@ const UserDashboard: React.FC = () => {
   const [submittedReport, setSubmittedReport] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
   
+  // Meme State
+  const [dailyMeme, setDailyMeme] = useState<{text: string, color: string} | null>(null);
+
+  useEffect(() => {
+    const MEMES = [
+      { text: "When the deadline is tomorrow but you are chill 😎", color: "bg-orange-100 text-orange-800 border-orange-200" },
+      { text: "Work from home starter pack 📦: Zoom, Pajamas & Snacks", color: "bg-blue-100 text-blue-800 border-blue-200" },
+      { text: "Monday face 😭 ➜ Friday face 😄", color: "bg-purple-100 text-purple-800 border-purple-200" },
+      { text: "I'm not lazy, I'm on energy saving mode 🔋", color: "bg-green-100 text-green-800 border-green-200" },
+      { text: "My code works... I have no idea why 🤔", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+      { text: "Scheduled a meeting to schedule another meeting 📅", color: "bg-gray-100 text-gray-800 border-gray-200" },
+      { text: "Professional multitasker: I can listen, ignore and forget at the same time 🎧", color: "bg-pink-100 text-pink-800 border-pink-200" }
+    ];
+    setDailyMeme(MEMES[Math.floor(Math.random() * MEMES.length)]);
+  }, []);
+
   // Form State
   const [formData, setFormData] = useState({
     completeWork: '',
@@ -106,6 +120,19 @@ const UserDashboard: React.FC = () => {
           <p className="text-gray-500 text-sm">Submit your work progress</p>
         </div>
       </div>
+
+      {/* DAILY MEME SECTION */}
+      {dailyMeme && (
+        <div className={`p-5 rounded-xl border ${dailyMeme.color} shadow-sm animate-in slide-in-from-top-5 duration-700 flex items-start gap-4`}>
+          <div className="bg-white/50 p-2 rounded-full text-2xl shadow-sm">
+            🤣
+          </div>
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">Daily Work Vibe</h3>
+            <p className="text-lg font-bold leading-tight">"{dailyMeme.text}"</p>
+          </div>
+        </div>
+      )}
 
       {/* WORK REPORT SECTION */}
       <div>
