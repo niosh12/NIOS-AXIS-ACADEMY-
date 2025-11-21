@@ -1,10 +1,11 @@
 
+
 import React, { useState } from 'react';
 import { useAuth } from '../../App';
 import { Card, Button, TextArea, Input } from '../../components/UI';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Send, CheckCircle, ClipboardList } from 'lucide-react';
+import { Send, CheckCircle, ClipboardList, AlertTriangle, Sparkles } from 'lucide-react';
 import { WorkReport } from '../../types';
 
 const UserDashboard: React.FC = () => {
@@ -20,10 +21,54 @@ const UserDashboard: React.FC = () => {
     remark: ''
   });
 
+  // Validation State
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  // AI Logic: Auto Report Quality Check
+  const validateReportQuality = (): string | null => {
+    const minWords = 5;
+    const minChars = 20;
+
+    const countWords = (str: string) => str.trim().split(/\s+/).length;
+
+    // 1. Check Empty/Short Fields
+    if (formData.completeWork.length < minChars || countWords(formData.completeWork) < minWords) {
+      return "Your 'Completed Work' detail is too short. Please describe what you did today in more detail.";
+    }
+    if (formData.nextDayPlan.length < minChars || countWords(formData.nextDayPlan) < minWords) {
+      return "Your 'Next Day Plan' is too vague. Please specify what you plan to achieve tomorrow.";
+    }
+
+    // 2. Check Repetition
+    if (formData.completeWork.toLowerCase().trim() === formData.pendingWork.toLowerCase().trim()) {
+      return "Completed Work and Pending Work cannot be exactly the same.";
+    }
+    if (formData.completeWork.toLowerCase().trim() === formData.nextDayPlan.toLowerCase().trim()) {
+      return "Your plan for tomorrow seems to be a copy of today's work. Please update it.";
+    }
+
+    // 3. Check for "Nil", "Nothing", "Same" spam
+    const spamWords = ['nil', 'nothing', 'same', 'no work', 'na'];
+    if (spamWords.includes(formData.completeWork.toLowerCase().trim())) {
+      return "Please provide a valid update for Completed Work. 'Nil' or 'Nothing' is not accepted.";
+    }
+
+    return null; // No errors
+  };
+
   // Report Logic
   const handleSubmitReport = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    setValidationError(null);
+
+    // Run Quality Check
+    const qualityError = validateReportQuality();
+    if (qualityError) {
+      setValidationError(qualityError);
+      return;
+    }
+
     setLoadingReport(true);
 
     const report: WorkReport = {
@@ -78,9 +123,18 @@ const UserDashboard: React.FC = () => {
         ) : (
           <form onSubmit={handleSubmitReport} className="animate-in slide-in-from-bottom-4 duration-500">
             <Card className="space-y-6 shadow-md border-t-4 border-t-blue-500">
+              
+              <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-3 text-sm text-blue-800 border border-blue-100">
+                <Sparkles className="w-5 h-5 text-blue-500 mt-0.5" />
+                <div>
+                  <p className="font-bold">AI Quality Check Enabled</p>
+                  <p>Please write detailed updates. Short or repeated reports will be automatically rejected.</p>
+                </div>
+              </div>
+
               <TextArea 
                 label="1. Completed Work Today" 
-                placeholder="List all the tasks you finished today..."
+                placeholder="List all the tasks you finished today (Min 5 words)..."
                 value={formData.completeWork}
                 onChange={e => setFormData({...formData, completeWork: e.target.value})}
                 required
@@ -110,6 +164,16 @@ const UserDashboard: React.FC = () => {
                 className="bg-gray-50 focus:bg-white transition-colors"
               />
               
+              {validationError && (
+                <div className="p-4 bg-red-50 border border-red-100 rounded-lg flex items-start gap-3 text-red-800 animate-pulse">
+                  <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-bold">Report Quality Issue:</p>
+                    <p className="text-sm">{validationError}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="pt-4">
                 <Button type="submit" className="w-full py-3 text-lg font-semibold shadow-lg bg-blue-600 hover:bg-blue-700" icon={Send} isLoading={loadingReport}>
                   Submit Daily Report

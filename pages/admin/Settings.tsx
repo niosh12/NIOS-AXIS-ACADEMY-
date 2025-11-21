@@ -1,10 +1,11 @@
 
+
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, updateDoc, doc, addDoc, deleteDoc, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, addDoc, deleteDoc, onSnapshot, orderBy, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Card, Button, Input, ConfirmModal } from '../../components/UI';
-import { Download, Save, RefreshCw, Copy, Search, Plus, Trash2, Shield } from 'lucide-react';
-import { AdminData } from '../../types';
+import { Download, Save, RefreshCw, Copy, Search, Plus, Trash2, Shield, MapPin, Navigation } from 'lucide-react';
+import { AdminData, SystemSettings } from '../../types';
 
 const AdminSettings: React.FC = () => {
   // User Reset State
@@ -18,17 +19,70 @@ const AdminSettings: React.FC = () => {
   const [newAdmin, setNewAdmin] = useState({ email: '', password: '' });
   const [isAdminLoading, setIsAdminLoading] = useState(false);
 
-  // Fetch Admins
+  // Geofencing State
+  const [geoSettings, setGeoSettings] = useState<SystemSettings>({
+    officeLat: 0,
+    officeLng: 0,
+    allowedRadius: 50,
+    enableGeofencing: false
+  });
+  const [savingGeo, setSavingGeo] = useState(false);
+
+  // Fetch Data
   useEffect(() => {
-    const q = query(collection(db, 'admins'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
+    // 1. Fetch Admins
+    const qAdmin = query(collection(db, 'admins'), orderBy('createdAt', 'desc'));
+    const unsubAdmin = onSnapshot(qAdmin, (snap) => {
       const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as AdminData))
-        // Filter out invalid entries to prevent "Invalid Date" or broken rows
         .filter(a => a.createdAt && !isNaN(new Date(a.createdAt).getTime()));
       setAdmins(list);
     });
-    return () => unsub();
+
+    // 2. Fetch System Settings
+    const fetchSettings = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'attendance_config');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setGeoSettings(docSnap.data() as SystemSettings);
+        }
+      } catch (e) {
+        console.error("Error fetching settings", e);
+      }
+    };
+    fetchSettings();
+
+    return () => unsubAdmin();
   }, []);
+
+  // --- Geofencing Logic ---
+  const saveGeoSettings = async () => {
+    setSavingGeo(true);
+    try {
+      await setDoc(doc(db, 'settings', 'attendance_config'), geoSettings);
+      alert("Geofencing settings saved successfully.");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to save settings.");
+    } finally {
+      setSavingGeo(false);
+    }
+  };
+
+  const setCurrentLocationAsOffice = () => {
+    if (!navigator.geolocation) return alert("Geolocation not supported");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeoSettings(prev => ({
+          ...prev,
+          officeLat: pos.coords.latitude,
+          officeLng: pos.coords.longitude
+        }));
+      },
+      (err) => alert("Could not get location: " + err.message),
+      { enableHighAccuracy: true }
+    );
+  };
 
   // --- Password Reset Logic ---
   const handleResetSubmit = (e: React.FormEvent) => {
@@ -120,6 +174,79 @@ const AdminSettings: React.FC = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">Settings</h2>
       
+      {/* GEOFENCING CONFIG */}
+      <Card title="Attendance Geofencing" className="border-l-4 border-l-brand-500">
+        <div className="flex items-start gap-4 mb-6">
+          <div className="p-3 bg-blue-100 rounded-full text-blue-600 hidden md:block">
+            <MapPin className="w-6 h-6" />
+          </div>
+          <div className="flex-1">
+             <p className="text-sm text-gray-600 mb-4">
+               Restrict attendance marking to a specific office location. Users must be within the allowed radius to check in.
+             </p>
+             
+             <div className="flex items-center mb-4">
+               <input 
+                 type="checkbox" 
+                 id="enableGeo"
+                 className="w-4 h-4 text-brand-600 rounded"
+                 checked={geoSettings.enableGeofencing}
+                 onChange={e => setGeoSettings({...geoSettings, enableGeofencing: e.target.checked})}
+               />
+               <label htmlFor="enableGeo" className="ml-2 text-gray-800 font-medium">Enable Geofencing Restriction</label>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+               <Input 
+                 label="Office Latitude" 
+                 type="number" 
+                 step="any"
+                 value={geoSettings.officeLat} 
+                 onChange={e => setGeoSettings({...geoSettings, officeLat: parseFloat(e.target.value)})}
+               />
+               <Input 
+                 label="Office Longitude" 
+                 type="number" 
+                 step="any"
+                 value={geoSettings.officeLng} 
+                 onChange={e => setGeoSettings({...geoSettings, officeLng: parseFloat(e.target.value)})}
+               />
+               <Input 
+                 label="Radius (Meters)" 
+                 type="number" 
+                 value={geoSettings.allowedRadius} 
+                 onChange={e => setGeoSettings({...geoSettings, allowedRadius: parseFloat(e.target.value)})}
+               />
+             </div>
+             
+             <div className="flex flex-col sm:flex-row gap-3 mt-2">
+               <Button 
+                 variant="secondary" 
+                 onClick={setCurrentLocationAsOffice}
+                 icon={Navigation}
+                 className="text-xs sm:text-sm"
+               >
+                 Set Current Location
+               </Button>
+               <Button 
+                 onClick={saveGeoSettings} 
+                 isLoading={savingGeo}
+                 icon={Save}
+                 className="text-xs sm:text-sm bg-blue-600 hover:bg-blue-700"
+               >
+                 Save Geo Settings
+               </Button>
+             </div>
+             
+             {geoSettings.officeLat !== 0 && (
+               <div className="mt-4 text-xs text-gray-500">
+                 Current Config: <a href={`https://www.google.com/maps/search/?api=1&query=${geoSettings.officeLat},${geoSettings.officeLng}`} target="_blank" className="text-blue-600 underline">View on Map</a>
+               </div>
+             )}
+          </div>
+        </div>
+      </Card>
+
       {/* ADMIN MANAGEMENT SECTION */}
       <Card title="Admin Access Management">
         <p className="text-sm text-gray-600 mb-4">Manage who has administrative access to this portal.</p>
@@ -237,15 +364,6 @@ const AdminSettings: React.FC = () => {
             )}
           </div>
         )}
-      </Card>
-
-      {/* DATA MANAGEMENT */}
-      <Card title="Data Management">
-        <p className="text-sm text-gray-600 mb-4">Download comprehensive reports of all system activity.</p>
-        <div className="flex gap-4">
-          <Button variant="secondary" icon={Download} onClick={() => alert("CSV Generation would happen here")}>Download All Reports (CSV)</Button>
-          <Button variant="secondary" icon={Download} onClick={() => alert("PDF Generation would happen here")}>Download Attendance (PDF)</Button>
-        </div>
       </Card>
 
       {/* BRANDING */}

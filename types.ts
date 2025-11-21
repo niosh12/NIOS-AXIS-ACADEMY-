@@ -86,6 +86,21 @@ export interface AttendanceRecord {
   overtimeStartTime?: string;
   overtimeEndTime?: string;
   overtimeHours?: string;
+  latitude?: number;
+  longitude?: number;
+  locationError?: string;
+  // Fun Features
+  funReaction?: string;
+  challengeText?: string;
+  challengeCompleted?: boolean;
+}
+
+export interface SystemSettings {
+  id?: string;
+  officeLat: number;
+  officeLng: number;
+  allowedRadius: number; // meters
+  enableGeofencing: boolean;
 }
 
 export interface AuthState {

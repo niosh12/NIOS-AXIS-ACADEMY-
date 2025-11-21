@@ -1,10 +1,11 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Card, Button } from '../../components/UI';
 import { AttendanceRecord } from '../../types';
-import { Calendar, Clock, X } from 'lucide-react';
+import { Calendar, Clock, X, MapPin } from 'lucide-react';
 
 const AdminAttendance: React.FC = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -24,8 +25,6 @@ const AdminAttendance: React.FC = () => {
         const snap = await getDocs(q);
         const data = snap.docs.map(d => ({ id: d.id, ...d.data() } as AttendanceRecord));
         
-        // Sort roughly by time string. Since it is "10:00 AM", normal string sort might not be perfect 
-        // but consistent enough for a simple dashboard.
         setRecords(data);
       } catch (e) {
         console.error(e);
@@ -62,6 +61,7 @@ const AdminAttendance: React.FC = () => {
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3">In-Time</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Location</th>
                 <th className="px-4 py-3">Photo</th>
                 <th className="px-4 py-3">Out-Time</th>
                 <th className="px-4 py-3">OT Start</th>
@@ -72,22 +72,17 @@ const AdminAttendance: React.FC = () => {
             <tbody className="divide-y divide-gray-100">
               {loading && (
                 <tr>
-                  <td colSpan={10} className="px-6 py-8 text-center text-gray-400">Loading records...</td>
+                  <td colSpan={11} className="px-6 py-8 text-center text-gray-400">Loading records...</td>
                 </tr>
               )}
               
               {!loading && records.length === 0 && (
                  <tr>
-                  <td colSpan={10} className="px-6 py-8 text-center text-gray-400">No attendance records found for this date.</td>
+                  <td colSpan={11} className="px-6 py-8 text-center text-gray-400">No attendance records found for this date.</td>
                 </tr>
               )}
 
               {!loading && records.map(record => {
-                // Logic to display Out Time: 
-                // If it's past 6 PM today, we assume 06:00 PM if not explicitly set, or display what's in DB.
-                // Since we saved "06:00 PM" explicitly on OT start, or implied it, we can just show "06:00 PM" for all past dates/records
-                // or show "-" if the day isn't over. For simplicity, we show what is in DB or "-"
-                
                 const outTimeDisplay = record.outTime || (record.overtimeStartTime ? '06:00 PM' : '-');
 
                 return (
@@ -100,6 +95,20 @@ const AdminAttendance: React.FC = () => {
                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${record.status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                          {record.status}
                        </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {record.latitude && record.longitude ? (
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${record.latitude},${record.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-blue-600 hover:underline"
+                        >
+                          <MapPin className="w-3 h-3" /> View Map
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-xs">Not Available</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div 
