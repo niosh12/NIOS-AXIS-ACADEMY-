@@ -91,20 +91,30 @@ const UserLayout: React.FC = () => {
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4 h-16 flex justify-between items-center">
-          <div className="flex items-center">
-             <div className="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold mr-3 overflow-hidden shadow-sm">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold overflow-hidden shadow-sm border border-white">
                 {user?.photoBase64 ? (
                   <img src={user.photoBase64} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   displayInitial
                 )}
              </div>
-             <div>
-               <h1 className="font-bold text-gray-800 leading-tight">{displayName}</h1>
+             <div className="hidden sm:block">
+               <h1 className="font-bold text-gray-800 leading-tight truncate max-w-[150px]">{displayName}</h1>
                <p className="text-xs text-gray-500">{user?.userId}</p>
              </div>
           </div>
-          <button onClick={handleLogout} className="text-gray-500 hover:text-red-600 transition-colors">
+
+          <div className="flex items-center gap-2">
+            <img 
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-gDN6R3LZ6UIW9f7VISLRzm9u_CvVlSRh2A&s" 
+              alt="Logo" 
+              className="w-8 h-8 rounded-full object-cover border border-gray-200" 
+            />
+            <span className="font-bold text-brand-700 text-sm sm:text-base">NIOS Axis</span>
+          </div>
+
+          <button onClick={handleLogout} className="text-gray-500 hover:text-red-600 transition-colors ml-2">
             <LogOut className="w-5 h-5" />
           </button>
         </div>

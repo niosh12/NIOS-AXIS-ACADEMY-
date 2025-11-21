@@ -1,5 +1,4 @@
 
-
 import React, { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../App';
@@ -86,9 +85,16 @@ const AdminLayout: React.FC = () => {
     <div className="flex h-screen bg-gray-100 overflow-hidden">
       {/* Sidebar */}
       <div className="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
-        <div className="p-6 border-b border-gray-100">
-          <h1 className="text-2xl font-bold text-brand-700">NIOS Axis</h1>
-          <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mt-1">Admin Panel</p>
+        <div className="p-6 border-b border-gray-100 flex items-center gap-3">
+          <img 
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-gDN6R3LZ6UIW9f7VISLRzm9u_CvVlSRh2A&s" 
+            alt="Logo" 
+            className="w-10 h-10 rounded-full object-cover border border-gray-200"
+          />
+          <div>
+            <h1 className="text-lg font-bold text-brand-700 leading-tight">NIOS Axis</h1>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Admin Panel</p>
+          </div>
         </div>
         
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -126,7 +132,14 @@ const AdminLayout: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}
         <header className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-          <span className="font-bold text-brand-700">NIOS Axis Admin</span>
+          <div className="flex items-center gap-2">
+            <img 
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-gDN6R3LZ6UIW9f7VISLRzm9u_CvVlSRh2A&s" 
+              alt="Logo" 
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            <span className="font-bold text-brand-700">NIOS Admin</span>
+          </div>
           <button onClick={handleLogout} className="text-gray-500"><LogOut className="w-5 h-5" /></button>
         </header>
         
@@ -135,7 +148,7 @@ const AdminLayout: React.FC = () => {
           <ToastContainer toasts={toasts} removeToast={removeToast} />
           
           <footer className="mt-12 pt-6 border-t border-gray-200 text-center text-gray-400 text-xs">
-            THIS APP MADE BY DRAP-S-COMPANYS
+            THIS APP MADE BY NIOS VISION POINT
           </footer>
         </main>
       </div>

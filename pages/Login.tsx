@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
@@ -179,9 +178,14 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-brand-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-brand-900 mb-2">NIOS Axis Academy</h1>
-          <p className="text-brand-700">CRM Portal Login</p>
+        <div className="text-center mb-8 animate-in slide-in-from-top-4 duration-500">
+          <img 
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSi0yZr23c1YxOeAfqn1pCJHb3t0M9v9Cv9og&s" 
+            alt="NIOS Logo" 
+            className="w-24 h-24 mx-auto mb-6 rounded-full object-cover shadow-lg border-4 border-white"
+          />
+          <h1 className="text-3xl font-bold text-brand-900 mb-2 tracking-tight">NIOS AXIS ACADEMY</h1>
+          <p className="text-brand-700 font-medium">CRM Portal Login</p>
         </div>
 
         <Card className="shadow-xl border-0">
@@ -238,7 +242,7 @@ const Login: React.FC = () => {
         </Card>
         
         <p className="text-center text-gray-400 text-xs mt-8">
-          Protected System • DRAP-S-COMPANYS
+          Protected System • NIOS VISION POINT
         </p>
       </div>
     </div>
