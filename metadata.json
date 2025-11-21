@@ -1,0 +1,7 @@
+{
+  "name": "NIOS Axis Academy CRM",
+  "description": "A CRM Web App for NIOS Axis Academy for user management, work reporting, and attendance tracking.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
